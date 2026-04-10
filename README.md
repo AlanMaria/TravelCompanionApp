@@ -73,7 +73,7 @@ Input	Conversion	Output
 
 Clone the repository:
 
-git clone https://github.com/your-username/travel-companion-app.git
+git clone https://github.com/AlanMaria/TravelCompanionApp.git
 Open the project in Android Studio
 Click Run ▶
 Use an emulator or physical Android device
