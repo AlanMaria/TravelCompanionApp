@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="@color/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -8,74 +8,89 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
-
+        android:padding="24dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Travel Companion"
-            android:textSize="26sp"
+            android:text="Travel Companion App"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
-            android:gravity="center"
-            android:layout_marginBottom="20dp"/>
+            android:layout_gravity="center"
+            android:paddingBottom="20dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Conversion Type"
+            android:textStyle="bold"
+            android:paddingTop="8dp" />
 
         <Spinner
-            android:id="@+id/spinnerCategory"
+            android:id="@+id/typeBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"/>
+            android:layout_marginTop="6dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Convert From"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
 
         <Spinner
-            android:id="@+id/spinnerFrom"
+            android:id="@+id/startBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@color/white"/>
+            android:layout_marginTop="6dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Convert To"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
 
         <Spinner
-            android:id="@+id/spinnerTo"
+            android:id="@+id/endBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@color/white"/>
+            android:layout_marginTop="6dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Value"
+            android:textStyle="bold"
+            android:paddingTop="16dp" />
 
         <EditText
-            android:id="@+id/etInput"
+            android:id="@+id/numberInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter value"
-            android:padding="12dp"
-            android:textColor="@color/textPrimary"
-            android:background="@android:drawable/edit_text"
-            android:layout_marginTop="12dp"/>
-
+            android:layout_marginTop="6dp"
+            android:hint="Type value here"
+            android:inputType="numberDecimal|numberSigned"
+            android:padding="12dp" />
 
         <Button
-            android:id="@+id/btnConvert"
+            android:id="@+id/convertBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Convert"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/primary"
-            android:layout_marginTop="16dp"/>
-
+            android:text="Convert Now"
+            android:layout_marginTop="24dp" />
 
         <TextView
-            android:id="@+id/tvResult"
+            android:id="@+id/answerText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Result will appear here"
-            android:textSize="18sp"
-            android:textColor="@color/textPrimary"
-            android:background="@color/white"
-            android:padding="16dp"
-            android:layout_marginTop="20dp"/>
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingTop="30dp" />
 
     </LinearLayout>
+
 </ScrollView>

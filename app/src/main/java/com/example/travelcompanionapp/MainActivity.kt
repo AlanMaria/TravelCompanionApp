@@ -1,187 +1,149 @@
 package com.example.travelcompanionapp
 
-import android.icu.util.Currency
 import android.os.Bundle
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var spinnerCategory: Spinner
-    private lateinit var spinnerFrom: Spinner
-    private lateinit var spinnerTo: Spinner
-    private lateinit var etInput: EditText
-    private lateinit var btnConvert: Button
-    private lateinit var tvResult: TextView
-
-    private val categories = arrayOf(
-        "Currency",
-        "Fuel Efficiency",
-        "Volume",
-        "Distance",
-        "Temperature"
+    private lateinit var typeBox: Spinner
+    private lateinit var startBox: Spinner
+    private lateinit var endBox: Spinner
+    private lateinit var numberInput: EditText
+    private lateinit var answerText: TextView
+    private lateinit var convertBtn: Button
+    private val conversionTypes = listOf("Currency", "Fuel Efficiency", "Liquid Volume", "Temperature")
+    private val units = mapOf(
+        "Currency" to listOf("USD", "AUD", "EUR", "JPY", "GBP"),
+        "Fuel Efficiency" to listOf("mpg", "km/L"),
+        "Liquid Volume" to listOf("Gallon", "Liter"),
+        "Temperature" to listOf("Celsius", "Fahrenheit", "Kelvin")
     )
-
-    private val currencyUnits = arrayOf("USD", "AUD", "EUR", "JPY", "GBP")
-    private val fuelUnits = arrayOf("MPG", "KM/L")
-    private val volumeUnits = arrayOf("Gallon", "Liter")
-    private val distanceUnits = arrayOf("Kilometer", "Nautical Mile")
-    private val temperatureUnits = arrayOf("Celsius", "Fahrenheit", "Kelvin")
-
+    private val currencyRate = mapOf(
+        "USD" to 1.0,
+        "AUD" to 1.55,
+        "EUR" to 0.92,
+        "JPY" to 148.50,
+        "GBP" to 0.78
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        spinnerCategory = findViewById(R.id.spinnerCategory)
-        spinnerFrom = findViewById(R.id.spinnerFrom)
-        spinnerTo = findViewById(R.id.spinnerTo)
-        etInput = findViewById(R.id.etInput)
-        btnConvert = findViewById(R.id.btnConvert)
-        tvResult = findViewById(R.id.tvResult)
+        typeBox = findViewById(R.id.typeBox)
+        startBox = findViewById(R.id.startBox)
+        endBox = findViewById(R.id.endBox)
+        numberInput = findViewById(R.id.numberInput)
+        answerText = findViewById(R.id.answerText)
+        convertBtn = findViewById(R.id.convertBtn)
+        //puts the conversion categories into the first spinner.
+        typeBox.adapter = makeAdapter(conversionTypes)
+        loadUnitOptions("Currency")
 
-        val categoryAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            categories
-        )
-        spinnerCategory.adapter = categoryAdapter
-
-        updateUnitSpinners("Currency")
-
-        spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        typeBox.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedCategory = categories[position]
-                updateUnitSpinners(selectedCategory)
+                loadUnitOptions(conversionTypes[position])
+                answerText.text = "Result will appear here"
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        btnConvert.setOnClickListener {
-            handleConversion()
+        convertBtn.setOnClickListener {
+            convertNow()
         }
     }
 
-    private fun updateUnitSpinners(category: String) {
-        val units = when (category) {
-            "Currency" -> currencyUnits
-            "Fuel Efficiency" -> fuelUnits
-            "Volume" -> volumeUnits
-            "Distance" -> distanceUnits
-            "Temperature" -> temperatureUnits
-            else -> arrayOf()
-        }
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, units)
-        spinnerFrom.adapter = adapter
-        spinnerTo.adapter = adapter
+    private fun makeAdapter(items: List<String>): ArrayAdapter<String> {
+        return ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items)
     }
 
-    private fun handleConversion() {
-        val inputText = etInput.text.toString().trim()
+    private fun loadUnitOptions(type: String) {
+        val selectedUnits = units[type] ?: emptyList()
+        startBox.adapter = makeAdapter(selectedUnits)
+        endBox.adapter = makeAdapter(selectedUnits)
+    }
 
-        if (inputText.isEmpty()) {
-            etInput.error = "Please enter a value"
+    private fun convertNow() {
+        val rawValue = numberInput.text.toString().trim()
+
+        if (rawValue.isBlank()) {
+            numberInput.error = "Enter a value"
             return
         }
 
-        val inputValue = inputText.toDoubleOrNull()
-        if (inputValue == null) {
-            etInput.error = "Please enter a valid number"
+        val amount = rawValue.toDoubleOrNull()
+
+        if (amount == null) {
+            numberInput.error = "Only numbers are allowed"
             return
         }
 
-        val category = spinnerCategory.selectedItem.toString()
-        val fromUnit = spinnerFrom.selectedItem.toString()
-        val toUnit = spinnerTo.selectedItem.toString()
+        val selectedType = typeBox.selectedItem.toString()
+        val from = startBox.selectedItem.toString()
+        val to = endBox.selectedItem.toString()
 
-        if (fromUnit == toUnit) {
-            tvResult.text = "Result: $inputValue $toUnit"
-            Toast.makeText(this, "Same  conversion selected", Toast.LENGTH_SHORT).show()
+        if (from == to) {
+            answerText.text = "No conversion needed: $amount $to"
+            Toast.makeText(this, "Same unit selected", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if ((category == "Fuel Efficiency" || category == "Volume" || category == "Distance" || category == "Currency") && inputValue < 0) {
-            etInput.error = "Negative values are not allowed for this conversion"
+        if (amount < 0 && selectedType != "Temperature") {
+            numberInput.error = "Negative values are not valid for this category"
             return
         }
 
-        val result = when (category) {
-            "Currency" -> convertCurrency(inputValue, fromUnit, toUnit)
-            "Fuel Efficiency" -> convertFuelEfficiency(inputValue, fromUnit, toUnit)
-            "Volume" -> convertVolume(inputValue, fromUnit, toUnit)
-            "Distance" -> convertDistance(inputValue, fromUnit, toUnit)
-            "Temperature" -> convertTemperature(inputValue, fromUnit, toUnit)
+        val finalAnswer = when (selectedType) {
+            "Currency" -> moneyConvert(amount, from, to)
+            "Fuel Efficiency" -> fuelConvert(amount, from, to)
+            "Liquid Volume" -> volumeConvert(amount, from, to)
+            "Temperature" -> temperatureConvert(amount, from, to)
             else -> null
         }
-
-        if (result != null) {
-            tvResult.text = "Result: %.2f %s".format(result, toUnit)
+        if (finalAnswer == null) {
+            answerText.text = "This conversion is not available"
         } else {
-            tvResult.text = "Conversion not supported"
+            answerText.text = "Converted value: %.2f %s".format(finalAnswer, to)
         }
     }
+    private fun moneyConvert(amount: Double, from: String, to: String): Double? {
+        val fromRate = currencyRate[from] ?: return null
+        val toRate = currencyRate[to] ?: return null
 
-    private fun convertCurrency(value: Double, from: String, to: String): Double? {
-        val usdValue = when (from) {
-            "USD" -> value
-            "AUD" -> value / 1.55
-            "EUR" -> value / 0.92
-            "JPY" -> value / 148.50
-            "GBP" -> value / 0.78
+        val amountInUsd = amount / fromRate
+        return amountInUsd * toRate
+    }
+    private fun fuelConvert(amount: Double, from: String, to: String): Double? {
+        return if (from == "mpg" && to == "km/L") {
+            amount * 0.425
+        } else if (from == "km/L" && to == "mpg") {
+            amount / 0.425
+        } else {
+            null
+        }
+    }
+    private fun volumeConvert(amount: Double, from: String, to: String): Double? {
+        return if (from == "Gallon" && to == "Liter") {
+            amount * 3.785
+        } else if (from == "Liter" && to == "Gallon") {
+            amount / 3.785
+        } else {
+            null
+        }
+    }
+    private fun temperatureConvert(amount: Double, from: String, to: String): Double? {
+        val celsiusValue = when (from) {
+            "Celsius" -> amount
+            "Fahrenheit" -> (amount - 32) / 1.8
+            "Kelvin" -> amount - 273.15
             else -> return null
         }
 
         return when (to) {
-            "USD" -> usdValue
-            "AUD" -> usdValue * 1.55
-            "EUR" -> usdValue * 0.92
-            "JPY" -> usdValue * 148.50
-            "GBP" -> usdValue * 0.78
-            else -> null
-        }
-    }
-
-    private fun convertFuelEfficiency(value: Double, from: String, to: String): Double? {
-        return when {
-            from == "MPG" && to == "KM/L" -> value * 0.425
-            from == "KM/L" && to == "MPG" -> value / 0.425
-            else -> null
-        }
-    }
-
-    private fun convertVolume(value: Double, from: String, to: String): Double? {
-        return when {
-            from == "Gallon" && to == "Liter" -> value * 3.785
-            from == "Liter" && to == "Gallon" -> value / 3.785
-            else -> null
-        }
-    }
-
-    private fun convertDistance(value: Double, from: String, to: String): Double? {
-        return when {
-            from == "Nautical Mile" && to == "Kilometer" -> value * 1.852
-            from == "Kilometer" && to == "Nautical Mile" -> value / 1.852
-            else -> null
-        }
-    }
-
-    private fun convertTemperature(value: Double, from: String, to: String): Double? {
-        return when {
-            from == "Celsius" && to == "Fahrenheit" -> (value * 1.8) + 32
-            from == "Fahrenheit" && to == "Celsius" -> (value - 32) / 1.8
-            from == "Celsius" && to == "Kelvin" -> value + 273.15
-            from == "Kelvin" && to == "Celsius" -> value - 273.15
-            from == "Fahrenheit" && to == "Kelvin" -> ((value - 32) / 1.8) + 273.15
-            from == "Kelvin" && to == "Fahrenheit" -> ((value - 273.15) * 1.8) + 32
+            "Celsius" -> celsiusValue
+            "Fahrenheit" -> (celsiusValue * 1.8) + 32
+            "Kelvin" -> celsiusValue + 273.15
             else -> null
         }
     }
